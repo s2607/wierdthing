@@ -1,5 +1,6 @@
 //Copyright FEB 2016 Stephen William Wiley WTFPL
 //cc -g -lm -lcurl mkpage.c -o mkpage &&./mkpage
+//cc -g -lm -lcurl mkpage.c -o mkpage &&gdb -se=./mkpage
 //obviously has libcurl as a dependancy
 //sources: libcurl docs, linux programmer's manual (never used memcpy before, needed reminder on realoc and frwite)
 #include<stdio.h>
@@ -26,6 +27,10 @@ void sm_init(sm *m,int l) {
 	m->i=0;
 }
 void sm_stretch(sm *m, int ld) {
+	char * a=m->m;
+	a=a+1;
+	a=a-1;
+	m->m=a;//write check 
 	m->m=realloc(m->m,(sizeof(char)*(m->l+ld)));
 	m->l=m->l+ld;
 	if(m->i>m->l)
@@ -103,11 +108,13 @@ int getavatar(void){
 }
 int isspan(char *e) {
 	//span elements should (can? TODO: read RFC...) not contain other elments
-	char *s[]={"h1","h2","h3","h4","h5","a","i","p","br","tr",""};
+	char *s[]={"h1","h2","h3","h4","h5","a","i","br","tr","p",""};
 	int i;
-	for(i=0;strlen(s[i]);i++){
-		if(strcmp(s[i],e))
-			return 1;
+	for(i=0;strlen(s[i]);i++);
+	int l=i;
+	for(i=0;i<l;i++){
+		if(!strcmp(s[i],e))
+			return i-l;
 	}
 	return 0;
 }
@@ -115,6 +122,8 @@ void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	//TODO: probably pretty sluggish because of many calls to
 	//sm_appendstr with one charecter strings
 	//allong with isspan 
+	if(!isspan(t))
+		sm_appendstr(doc,"\n");
 	sm_appendstr(doc,"<");
 	sm_appendstr(doc,t);
 	if(attr){
@@ -126,15 +135,21 @@ void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	sm_appendstr(doc,"<\\");
 	sm_appendstr(doc,t);
 	sm_appendstr(doc,">");
-	if(isspan(t))
+	if(!isspan(t))
 		sm_appendstr(doc,"\n");
 
 }
-char *tag(char *t, char *atter, char *inner){
-	sm *doc=sm_new(30);
+char *tagl(char *t, char *atter, char *inner){
+	sm *doc=sm_new(100);
 	append_tag(doc,t,atter,inner);
-	free(inner);
 	return sm_dumpstr(doc);
+}
+char *tag(char *t, char *atter, char *inner){
+	char *s=tagl(t, atter, inner);
+	free(inner);
+	return s;
+}
+void addlist(sm *doc,char *t,char **rows) {
 }
 char *all_header() {
 	static char *s=NULL;
@@ -145,8 +160,8 @@ char *all_header() {
 }
 char *index_body() {//Calling this in a loop will leak memory
 	//we only call it once so it's not a big deal
-	sm *doc=sm_new(200);
-	append_tag(doc,"h1",NULL,"Stephen Wiley");
+	sm *doc=sm_new(2);
+	sm_appendstr(doc,tag("center",NULL,tagl("h1",NULL,"Stephen Wiley")));
 
 	return sm_dumpstr(doc);
 }
@@ -155,9 +170,9 @@ char *mkindex(){
 	sm *body=sm_new(2);
 	sm *header=sm_new(2);
 	append_tag(header,"header",NULL,all_header());
-	sm_appendstr(header,"\n");
-	append_tag(body,"body",NULL,index_body());
-	sm_appendstr(body,"\n");
+	//sm_appendstr(header,"\n");
+	append_tag(body,"body","bgcolor=\"cyan\"",index_body());
+	//sm_appendstr(body,"\n");
 	//subsections built, concatonate them
 
 	sm_appendstrf(header,sm_dumpstr(body));
