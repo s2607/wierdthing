@@ -70,19 +70,24 @@ char *tolist(char **t) {
 	int i;
 	for(i=0;*(t+i);i++);
 	int l=i;
-	for(i=0;i<=l;i++){
+	for(i=0;i<l;i++){
 		sm_appendstr(s,*(t+i));
 		if(i<l&& l>1)
 			sm_appendstr(s,", ");
-		if(i+1==l)
+		if(i==l&&l>0)
 			sm_appendstr(s,"and ");
+		else
+			sm_appendstr(s,"  ");
 	}
+	return sm_dumpstr(s);
 }
 char *expand(phrase *p,int mode) {
-	sm *s=sm_new(100);
+	sm *s=sm_new(200);
 	if(!mode){
+		sm_appendstr(s," ");
 		char *m=tolist(p->m);
 		sm_appendstr(s,m);
+		free(m);
 		sm_appendstr(s," ");
 		sm_appendstr(s,p->s);
 	}
@@ -98,9 +103,11 @@ int update(phrase *p,cxt *c){
 char *scentence(phrase *subj,phrase *verb,phrase *obj,cxt *c) {
 	sm *s=sm_new(100);
 	
+	sm_appendstr(s," ");
 	sm_appendstrf(s,expand(subj,update(subj,c)));
 	sm_appendstrf(s,expand(verb,0));
 	sm_appendstrf(s,expand(obj,update(obj,c)));
+	sm_appendstr(s,".");
 	return sm_dumpstr(s);
 }
 char *experience() {
@@ -110,7 +117,7 @@ char *experience() {
 }
 char *calling() {
 	cxt c;
-	return scentence(mkp("I",""),mkp("know","not"),mkp("calling","mine"),&c);
+	return scentence(mkp("I",""),mkp("know","do not"),mkp("calling","my"),&c);
 }
 
 

@@ -177,11 +177,9 @@ char *image(char *p,char *t) {
 char *mailto(char *a) {
 	return anchor(a,"mailto:",a);
 }
-char *all_header() {
-	static char *s=NULL;
-	if(s)
-		free(s);
-	s=" ";
+sm *all_header(char *t) {
+	sm *s=sm_new(4);
+	append_tag(s,"head",NULL,tagl("title",NULL,t));
 	return s;
 }
 
@@ -190,7 +188,7 @@ char *index_body() {//Calling this in a loop will leak memory
 	sm *doc=sm_new(2);
 	sm_appendstr(doc,tag("center",NULL,tagl("h1",NULL,"Stephen Wiley")));
 	char *list[]={"phreaker2600","Goochland Virginia",mailto("swwiley@gmail.com"),0};//How's that for scary initializer!
-	addlist(doc,"ul",&list);
+	addlist(doc,"ul",list);
 	free(list[2]);
 	sm_appendstr(doc,image("","avatar.jpg"));
 	sm_appendstr(doc,anchor("about me","","aboutme.html"));
@@ -200,9 +198,7 @@ char *index_body() {//Calling this in a loop will leak memory
 char *mkindex(){
 	sm *doc=sm_new(2);
 	sm *body=sm_new(2);
-	sm *header=sm_new(2);
-	append_tag(header,"header",NULL,all_header());
-	//sm_appendstr(header,"\n");
+	sm *header=all_header("index");
 	append_tag(body,"body","bgcolor=\"cyan\"",index_body());
 	//sm_appendstr(body,"\n");
 	//subsections built, concatonate them
@@ -211,7 +207,26 @@ char *mkindex(){
 	append_tag(doc,"html",NULL,sm_dumpstr(header));
 	return sm_dump(doc);
 }
+char *aboutme_body(){
+	sm *doc=sm_new(200);
+	append_tag(doc,"center",NULL,tagl("h2",NULL,"Stephen Wiley"));
+	append_tag(doc,"h3",NULL,"Major");
+	char *ml[]={"Computer Science","2019",0};
+	addlist(doc,"ol",ml);
+	append_tag(doc,"p",NULL,experience());
+	append_tag(doc,"p",NULL,calling());
+	return sm_dumpstr(doc);
+
+
+}
 char *aboutme(){
+	sm *doc=sm_new(200);
+	sm *body=sm_new(200);
+	sm *header=all_header("Stephen Wiley");
+	append_tag(body,"body","bgcolor=\"cyan\"",aboutme_body());
+	sm_appendstrf(header,sm_dumpstr(body));
+	append_tag(doc,"html",NULL,sm_dumpstr(header));
+	return sm_dumpstr(doc);
 
 }
 void save(char *text, char *name) {
