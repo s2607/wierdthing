@@ -132,7 +132,7 @@ void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	}
 	sm_appendstr(doc,">");
 	sm_appendstr(doc,inner);
-	sm_appendstr(doc,"<\\");
+	sm_appendstr(doc,"</");
 	sm_appendstr(doc,t);
 	sm_appendstr(doc,">");
 	if(!isspan(t))
