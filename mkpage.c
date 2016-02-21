@@ -26,9 +26,10 @@ void sm_init(sm *m,int l) {
 	m->i=0;
 }
 void sm_stretch(sm *m, int ld) {
-	dieif(ld<1,"dont shrink the stretchy mem");
 	m->m=realloc(m->m,(sizeof(char)*(m->l+ld)));
 	m->l=m->l+ld;
+	if(m->i>m->l)
+		m->i=m->l;
 }
 void sm_append(sm *m,char *d, int l) {
 	dieif(l<1,"cannot append negative length string");
@@ -46,6 +47,7 @@ void sm_free(sm *m) {
 }
 char *sm_extract(sm *m){
 	char *s=calloc(m->i,sizeof(char));
+	memcpy(s,m->m,m->i);
 	return s;
 }
 char *sm_dump(sm *m) {
