@@ -41,18 +41,28 @@ void sm_append(sm *m,char *d, int l) {
 void sm_appendstr(sm *m, char *s) {
 	sm_append(m,s,strlen(s));
 }
+void sm_appendstrf(sm *m, char *s) {
+	sm_appendstr(m,s);
+	free(s);
+}
 void sm_free(sm *m) {
 	free(m->m);
 	free(m);
 }
 char *sm_extract(sm *m){
-	char *s=calloc(m->i,sizeof(char));
+	char *s=calloc(m->i+1,sizeof(char));
 	memcpy(s,m->m,m->i);
 	return s;
 }
 char *sm_dump(sm *m) {
 	char *s=sm_extract(m);
 	sm_free(m);
+	return s;
+}
+char *sm_dumpstr(sm *m) {//ensure zero at end
+	int i=m->i;
+	char *s=sm_dump(m);//m invalid now
+	*(s+i+1)=0;
 	return s;
 }
 sm *sm_new(int l){
@@ -107,17 +117,20 @@ void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	sm_appendstr(doc,">");
 
 }
-void append_tagc(sm *doc, char *t, char *atter, char *inner){
+char *tag(char *t, char *atter, char *inner){
+	sm *doc=sm_new(30);
 	append_tag(doc,t,atter,inner);
 	free(inner);
+	return sm_dumpstr(doc);
 }
 char *mkindex(){
 	sm *doc=sm_new(2);
 	sm *body=sm_new(2);
 	sm *header=sm_new(2);
-	append_tag(doc,"html",NULL,"hello world");
-	sm_free(body);
-	sm_free(header);
+	append_tag(header,"header",NULL," ");
+	append_tag(body,"body",NULL," ");
+	sm_appendstrf(header,sm_dumpstr(body));
+	append_tag(doc,"html",NULL,sm_dumpstr(header));
 	return sm_dump(doc);
 }
 void save(char *text, char *name) {
@@ -126,6 +139,7 @@ void save(char *text, char *name) {
 	dieif(!fp,"could not open file for writting");
 	dieif(fwrite(text,sizeof(char),strlen(text),fp)!=strlen(text),"incomplete write");
 	fclose(fp);
+	puts("written");
 
 }
 
