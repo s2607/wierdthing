@@ -1,6 +1,6 @@
 //Copyright FEB 2016 Stephen William Wiley WTFPL
-//cc -g -lm -lcurl mkpage.c -o mkpage &&./mkpage
-//cc -g -lm -lcurl mkpage.c -o mkpage &&gdb -se=./mkpage
+//cc -g -lm -lcurl mkpage.c english.c -o mkpage &&./mkpage
+//cc -g -lm -lcurl mkpage.c english.c -o mkpage &&gdb -se=./mkpage
 //obviously has libcurl as a dependancy
 //sources: libcurl docs, linux programmer's manual (never used memcpy before, needed reminder on realoc and frwite)
 #include<stdio.h>
@@ -8,16 +8,10 @@
 #include<stdlib.h>
 #include<curl/curl.h>
 #include<curl/easy.h>
+#include "sm.h"
 const char * PIC_URL= "https://avatars3.githubusercontent.com/u/10791820?v=3&s=400"; //TODO: fix url
 const char * PIC_FNAME ="avatar.jpg";
 char *dbg_context;
-typedef struct sm {
-	//stretchy mem
-	char *m;
-	int l;
-	int i;
-}sm;
-void dieif(int c, char *m);
 void sm_init(sm *m,int l) {
 	if(m->l)
 		free(m->m);
@@ -200,6 +194,7 @@ char *index_body() {//Calling this in a loop will leak memory
 	free(list[2]);
 	sm_appendstr(doc,image("","avatar.jpg"));
 	sm_appendstr(doc,anchor("about me","","aboutme.html"));
+	sm_appendstr(doc,anchor("personal web page","http://","swiley.net/index.html"));
 	return sm_dumpstr(doc);
 }
 char *mkindex(){
@@ -215,6 +210,9 @@ char *mkindex(){
 	sm_appendstrf(header,sm_dumpstr(body));
 	append_tag(doc,"html",NULL,sm_dumpstr(header));
 	return sm_dump(doc);
+}
+char *aboutme(){
+
 }
 void save(char *text, char *name) {
 	FILE *fp=fopen(name,"w");
@@ -233,5 +231,9 @@ int main() {
 	save(page,"index.html");
 	puts("cleanup from index.html....");
 	free(page);
-
+	puts("about me");
+	page=aboutme();
+	dieif(!page,"whoops (aboutme page string pointer)");
+	save(page,"aboutme.html");
+	return 0;
 }
