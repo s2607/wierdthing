@@ -101,9 +101,20 @@ int getavatar(void){
 	fclose(jpgfp);
 	return 0;
 }
+int isspan(char *e) {
+	//span elements should (can? TODO: read RFC...) not contain other elments
+	char *s[]={"h1","h2","h3","h4","h5","a","i","p","br","tr",""};
+	int i;
+	for(i=0;strlen(s[i]);i++){
+		if(strcmp(s[i],e))
+			return 1;
+	}
+	return 0;
+}
 void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	//TODO: probably pretty sluggish because of many calls to
 	//sm_appendstr with one charecter strings
+	//allong with isspan 
 	sm_appendstr(doc,"<");
 	sm_appendstr(doc,t);
 	if(attr){
@@ -115,6 +126,8 @@ void append_tag(sm *doc,char *t, char *attr,char *inner) {
 	sm_appendstr(doc,"<\\");
 	sm_appendstr(doc,t);
 	sm_appendstr(doc,">");
+	if(isspan(t))
+		sm_appendstr(doc,"\n");
 
 }
 char *tag(char *t, char *atter, char *inner){
@@ -130,15 +143,22 @@ char *all_header() {
 	s=" ";
 	return s;
 }
-char *index_body() {
-	return " ";
+char *index_body() {//Calling this in a loop will leak memory
+	//we only call it once so it's not a big deal
+	sm *doc=sm_new(200);
+	append_tag(doc,"h1",NULL,"Stephen Wiley");
+
+	return sm_dumpstr(doc);
 }
 char *mkindex(){
 	sm *doc=sm_new(2);
 	sm *body=sm_new(2);
 	sm *header=sm_new(2);
 	append_tag(header,"header",NULL,all_header());
+	sm_appendstr(header,"\n");
 	append_tag(body,"body",NULL,index_body());
+	sm_appendstr(body,"\n");
+	//subsections built, concatonate them
 
 	sm_appendstrf(header,sm_dumpstr(body));
 	append_tag(doc,"html",NULL,sm_dumpstr(header));
