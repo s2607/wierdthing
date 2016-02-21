@@ -150,6 +150,13 @@ char *tag(char *t, char *atter, char *inner){
 	return s;
 }
 void addlist(sm *doc,char *t,char **rows) {
+	int i=0;
+	sm *list=sm_new(30);
+	for(i=0;*(rows+i);i++)
+		append_tag(list,"li",NULL,*(rows+i));
+	char *s=sm_dump(list);
+	append_tag(doc,t,NULL,s);
+	free(s);
 }
 char *all_header() {
 	static char *s=NULL;
@@ -162,6 +169,8 @@ char *index_body() {//Calling this in a loop will leak memory
 	//we only call it once so it's not a big deal
 	sm *doc=sm_new(2);
 	sm_appendstr(doc,tag("center",NULL,tagl("h1",NULL,"Stephen Wiley")));
+	char *list[]={"a","b","c",0};
+	addlist(doc,"ul",&list);
 
 	return sm_dumpstr(doc);
 }
