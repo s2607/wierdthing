@@ -123,12 +123,23 @@ char *tag(char *t, char *atter, char *inner){
 	free(inner);
 	return sm_dumpstr(doc);
 }
+char *all_header() {
+	static char *s=NULL;
+	if(s)
+		free(s);
+	s=" ";
+	return s;
+}
+char *index_body() {
+	return " ";
+}
 char *mkindex(){
 	sm *doc=sm_new(2);
 	sm *body=sm_new(2);
 	sm *header=sm_new(2);
-	append_tag(header,"header",NULL," ");
-	append_tag(body,"body",NULL," ");
+	append_tag(header,"header",NULL,all_header());
+	append_tag(body,"body",NULL,index_body());
+
 	sm_appendstrf(header,sm_dumpstr(body));
 	append_tag(doc,"html",NULL,sm_dumpstr(header));
 	return sm_dump(doc);
