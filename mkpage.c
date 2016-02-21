@@ -7,7 +7,7 @@
 #include<stdlib.h>
 #include<curl/curl.h>
 #include<curl/easy.h>
-const char * PIC_URL= "https://avatars3.githubusercontent.com/u/10791820?v=3&s=400";
+const char * PIC_URL= "https://avatars3.githubusercontent.com/u/10791820?v=3&s=400"; //TODO: fix url
 const char * PIC_FNAME ="avatar.jpg";
 typedef struct sm {
 	//stretchy mem
@@ -32,6 +32,10 @@ void sm_append(sm *m,char *d, int l) {
 	if(m->i+l>m->l)
 		sm_stretch(m,m->l-(m->i+l));
 	memcpy(m->m+m->i,d,l);
+	m->i+=l;
+}
+void sm_appendstr(sm *m, char *s) {
+	sm_append(m,s,strlen(s));
 }
 void sm_free(sm *m) {
 	free(m->m);
@@ -71,9 +75,15 @@ int getavatar(void){
 	fclose(jpgfp);
 	return 0;
 }
-char *mkindex(){
+void append_tag(sm *doc,char *t, char *attr,char *inner) {
 
-	return "<html><body><h1>Hello</h1>World</body></html>";
+}
+char *mkindex(){
+	sm doc;
+	sm_init(&doc,1000);
+	sm_appendstr(&doc,"Hello world\n");
+	sm_appendstr(&doc,"Hello world");
+	return doc.m;
 }
 void save(char *text, char *name) {
 	FILE *fp=fopen(name,"w");
@@ -85,10 +95,11 @@ void save(char *text, char *name) {
 }
 
 int main() {
-	dieif(getavatar(),"could not get avatar");
+	//dieif(getavatar(),"could not get avatar");
 	char *page=mkindex();
 	dieif(!page,"whoops (index page string pointer)");
 	save(page,"index.html");
+	puts("cleanup from index.html....");
 	free(page);
 
 }
