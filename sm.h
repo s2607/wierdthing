@@ -17,3 +17,6 @@ char *sm_dump(sm *m) ;
 char *sm_dumpstr(sm *m) ;//ensure zero at en;
 sm *sm_new(int l);
 sm *sm_slice(sm *s,int a, int b) ;
+//really should go in an english.h
+char *experience();
+char *calling();
