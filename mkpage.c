@@ -37,7 +37,7 @@ void sm_stretch(sm *m, int ld) {
 		m->i=m->l;
 }
 void sm_append(sm *m,char *d, int l) {
-	dieif(l<1,"cannot append negative length string");
+	dieif(l<0,"cannot append negative length string");
 	if(m->i+l>m->l)
 		sm_stretch(m,(m->i+l)-m->l);
 	memcpy(m->m+m->i,d,l);
@@ -108,7 +108,7 @@ int getavatar(void){
 }
 int isspan(char *e) {
 	//span elements should (can? TODO: read RFC...) not contain other elments
-	char *s[]={"h1","h2","h3","h4","h5","a","i","br","tr","p",""};
+	char *s[]={"h1","h2","h3","h4","h5","a","i","image","br","tr","p",""};
 	int i;
 	for(i=0;strlen(s[i]);i++);
 	int l=i;
@@ -158,15 +158,30 @@ void addlist(sm *doc,char *t,char * *rows) {
 	append_tag(doc,t,NULL,s);
 	free(s);
 }
-char *mailto(char *a) {
+char *anchor(char *a,char *p,char *t) {
 	sm *href=sm_new(10);
-	sm_appendstr(href,"href=\"mailto:");
-	sm_appendstr(href,a);
+	sm_appendstr(href,"href=\"");
+	sm_appendstr(href,p);
+	sm_appendstr(href,t);
 	sm_appendstr(href,"\"");
 	char *s=sm_dumpstr(href);
 	char *r=tagl("a",s,a);
 	free(s);
 	return r;
+}
+char *image(char *p,char *t) {
+	sm *href=sm_new(10);
+	sm_appendstr(href,"src=\"");
+	sm_appendstr(href,p);
+	sm_appendstr(href,t);
+	sm_appendstr(href,"\"");
+	char *s=sm_dumpstr(href);
+	char *r=tagl("image",s,"");
+	free(s);
+	return r;
+}
+char *mailto(char *a) {
+	return anchor(a,"mailto:",a);
 }
 char *all_header() {
 	static char *s=NULL;
@@ -182,7 +197,9 @@ char *index_body() {//Calling this in a loop will leak memory
 	sm_appendstr(doc,tag("center",NULL,tagl("h1",NULL,"Stephen Wiley")));
 	char *list[]={"phreaker2600","Goochland Virginia",mailto("swwiley@gmail.com"),0};//How's that for scary initializer!
 	addlist(doc,"ul",&list);
-
+	free(list[2]);
+	sm_appendstr(doc,image("","avatar.jpg"));
+	sm_appendstr(doc,anchor("about me","","aboutme.html"));
 	return sm_dumpstr(doc);
 }
 char *mkindex(){
