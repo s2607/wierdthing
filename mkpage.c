@@ -149,7 +149,7 @@ char *tag(char *t, char *atter, char *inner){
 	free(inner);
 	return s;
 }
-void addlist(sm *doc,char *t,char **rows) {
+void addlist(sm *doc,char *t,char * *rows) {
 	int i=0;
 	sm *list=sm_new(30);
 	for(i=0;*(rows+i);i++)
@@ -158,6 +158,16 @@ void addlist(sm *doc,char *t,char **rows) {
 	append_tag(doc,t,NULL,s);
 	free(s);
 }
+char *mailto(char *a) {
+	sm *href=sm_new(10);
+	sm_appendstr(href,"href=\"mailto:");
+	sm_appendstr(href,a);
+	sm_appendstr(href,"\"");
+	char *s=sm_dumpstr(href);
+	char *r=tagl("a",s,a);
+	free(s);
+	return r;
+}
 char *all_header() {
 	static char *s=NULL;
 	if(s)
@@ -165,11 +175,12 @@ char *all_header() {
 	s=" ";
 	return s;
 }
+
 char *index_body() {//Calling this in a loop will leak memory
 	//we only call it once so it's not a big deal
 	sm *doc=sm_new(2);
 	sm_appendstr(doc,tag("center",NULL,tagl("h1",NULL,"Stephen Wiley")));
-	char *list[]={"a","b","c",0};
+	char *list[]={"phreaker2600","Goochland Virginia",mailto("swwiley@gmail.com"),0};//How's that for scary initializer!
 	addlist(doc,"ul",&list);
 
 	return sm_dumpstr(doc);
