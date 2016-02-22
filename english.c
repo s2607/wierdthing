@@ -12,6 +12,7 @@
 //such that me be program computers.
 #include "sm.h"
 #include <malloc.h>
+#include <string.h>
 #define NUM_SING 1
 #define NUM_PLUR 2
 #define TENS_PAST 3
@@ -27,7 +28,7 @@
 #define OBJ 4
 #define VERB 5
 #define SUBP 6
-char *bes[]={"","","", "was","","will","where","","will",0};
+char *bes[]={"","","", "am","","will","where","","will",0};
 char *besing[]={"","","", "have been","am","will be","where","are","will be",0};
 
 char *besed[]={"","","", "have","","will have","where having","are having","will have",0};
@@ -53,6 +54,27 @@ phrase *phrase_new(char *s){
 	}
 	return NULL;
 }
+char *be(int n,int ing){
+	char *s=bes[n];
+	if(ing==ING&&besing[n])
+		s=besing[n];
+	if(ing==ED&&besed[n])
+		s=besed[n];
+	return s;
+}
+int num(char *a,char **wl){
+	int i=0;
+	for(i=0;*(wl+i);i++){
+		if(!strcmp(a,*(wl+i))){
+			return i;
+		}
+	}
+	return -1;
+}
+int isbeing(phrase *r) {
+	return (num(r->s,bes)>0||num(r->s,besed)>0||num(r->s,besing)>0);
+
+}
 void modify(phrase *p,char *s){
 	p->parts[MODIFY]=phrase_new(s);
 
@@ -67,7 +89,22 @@ void normalize(phrase *r) {
 		}
 	}
 }
+int ising(char *s){
+	if(strstr(s,"ed")||strstr(s,"ing"))
+		return 1;
+	return 0;
+}
 void correct(phrase *r) {
+	int rpn=num(r->s,pn);
+	phrase *verb=r->parts[VERB];
+	if(rpn<0)
+		rpn=num(r->s,pn)+10;
+	if(verb){
+		if(rpn<10&&isbeing(verb))
+			verb->s=be(rpn,ising(verb->s));
+		if(ising(verb->s))
+			modify(verb,be(rpn,1));
+	}
 }
 phrase *sentence(char *subj,char *obj,char *verb,char *subp){
 	phrase *r=phrase_new(subj);
@@ -88,14 +125,6 @@ void phrase_free(phrase *p) {
 			phrase_free((phrase*)(p->parts[i]));
 }
 
-char *be(int n,int tense, int ing){
-	char *s=bes[n*tense];
-	if(ing==ING&&besing[n*tense])
-		s=besing[n*tense];
-	if(ing==ED&&besed[n*tense])
-		s=besed[n*tense];
-	return s;
-}
 
 char *prnoun(int n, int person,int gender, int poses) {
 	if(poses)
@@ -114,9 +143,10 @@ char *towords(phrase *subj){
 		sm_appendstr(s,towords(subj->parts[VERB]));
 		sm_appendstr(s,towords(subj->parts[OBJ]));
 		sm_appendstr(s,towords(subj->parts[SUBP]));
-		sm_appendstr(s,".");
+		if(*(s->m+1)>'a')
+			*(s->m+1)=*(s->m+1)-('a'-'A');
+	//yyj	sm_appendstr(s,".");
 	}else {
-		sm_appendstr(s," ");
 		sm_appendstr(s,towords(subj->parts[MODIFY])); 
 		sm_appendstr(s," ");
 		sm_appendstr(s,subj->s);
@@ -124,19 +154,35 @@ char *towords(phrase *subj){
 	return sm_dumpstr(s);
 
 }
-char *experience() {
-	sm *s=sm_new(500);
-	phrase *p[3];
-	p[0]=sentence("I","computers","program",NULL);
-	//p[1]=sentence("I","experience","be",NULL);
-	//p[1]->parts[SUBP]=sentence("with","systems",NULL,NULL);
-	sm_appendstr(s,towords(p[0]));
-	//sm_appendstr(s,towords(p[1]));
+char *paragraph(phrase **p,int l){
+	sm *s=sm_new(5);
+	int i=0;
+	for(i=0;i<=l;i++){
+		sm_appendstr(s,towords(p[i]));
+		sm_appendstr(s,".");
+	}
 	return sm_dumpstr(s);
+}
+
+
+char *experience() {
+	phrase *p[3];
+	p[0]=sentence("I","computers","programed",NULL);
+	p[1]=sentence("I",NULL,"worked",NULL);
+	p[1]->parts[OBJ]=sentence("","systems","with",NULL);
+	modify(((phrase *)p[1]->parts[OBJ])->parts[OBJ],"embeded");
+	return paragraph(p,1);
 
 }
 char *calling() {
-	return towords(sentence("I","computers","program",NULL));
+	phrase *p[3];
+	p[0]=sentence("I",NULL,"called",NULL);
+	modify(p[0]->parts[VERB],"feel");
+	p[0]->parts[OBJ]=sentence("","automation","to work with",NULL);
+	modify(((phrase *)p[0]->parts[OBJ])->parts[OBJ],"agricultural");
+	p[1]=sentence("math","me","interests","also");
+
+	return paragraph(p,1);
 }
 
 
