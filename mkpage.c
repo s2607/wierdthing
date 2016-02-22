@@ -61,7 +61,7 @@ char *sm_dump(sm *m) {
 char *sm_dumpstr(sm *m) {//ensure zero at end
 	int i=m->i;
 	char *s=sm_dump(m);//m invalid now
-	*(s+i+1)=0;
+	*(s+i)=0;
 	return s;
 }
 sm *sm_new(int l){

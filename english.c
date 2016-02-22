@@ -114,6 +114,7 @@ char *towords(phrase *subj){
 		sm_appendstr(s,towords(subj->parts[VERB]));
 		sm_appendstr(s,towords(subj->parts[OBJ]));
 		sm_appendstr(s,towords(subj->parts[SUBP]));
+		sm_appendstr(s,".");
 	}else {
 		sm_appendstr(s," ");
 		sm_appendstr(s,towords(subj->parts[MODIFY])); 
@@ -124,7 +125,15 @@ char *towords(phrase *subj){
 
 }
 char *experience() {
-	return towords(sentence("I","computers","program",NULL));
+	sm *s=sm_new(500);
+	phrase *p[3];
+	p[0]=sentence("I","computers","program",NULL);
+	//p[1]=sentence("I","experience","be",NULL);
+	//p[1]->parts[SUBP]=sentence("with","systems",NULL,NULL);
+	sm_appendstr(s,towords(p[0]));
+	//sm_appendstr(s,towords(p[1]));
+	return sm_dumpstr(s);
+
 }
 char *calling() {
 	return towords(sentence("I","computers","program",NULL));
