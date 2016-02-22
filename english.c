@@ -169,7 +169,7 @@ char *experience() {
 	phrase *p[3];
 	p[0]=sentence("I","computers","programed",NULL);
 	p[0]->parts[SUBP]=sentence("","years","for",NULL);
-	modify(((phrase *)p[0]->parts[SUBP])->parts[OBJ],"7");
+	modify(((phrase *)p[0]->parts[SUBP])->parts[OBJ],"9");
 	p[1]=sentence("I",NULL,"worked",NULL);
 	p[1]->parts[OBJ]=sentence("","systems","with",NULL);
 	modify(((phrase *)p[1]->parts[OBJ])->parts[OBJ],"embeded");
