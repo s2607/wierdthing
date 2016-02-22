@@ -75,8 +75,8 @@ int isbeing(phrase *r) {
 	return (num(r->s,bes)>0||num(r->s,besed)>0||num(r->s,besing)>0);
 
 }
-void modify(phrase *p,char *s){
-	p->parts[MODIFY]=phrase_new(s);
+phrase * modify(phrase *p,char *s){
+	return p->parts[MODIFY]=phrase_new(s);
 
 }
 void normalize(phrase *r) {
@@ -127,7 +127,9 @@ void phrase_free(phrase *p) {
 			phrase_free((phrase*)(p->parts[i]));
 }
 
-
+char *articlefor(phrase *p){
+	return "the ";
+}
 char *prnoun(int n, int person,int gender, int poses) {
 	if(poses)
 		return pnp[n*person];
@@ -140,11 +142,22 @@ char *towords(phrase *subj){
 		return sm_dumpstr(s);
 	if(subj->parts[SUBJ]==(phrase *)subj){
 		sm_appendstr(s," ");
-		sm_appendstr(s,towords(subj->parts[MODIFY])); 
-		sm_appendstr(s,subj->s);
-		sm_appendstr(s,towords(subj->parts[VERB]));
-		sm_appendstr(s,towords(subj->parts[OBJ]));
-		sm_appendstr(s,towords(subj->parts[SUBP]));
+		if(subj->parts[MODIFY]){
+			sm_appendstr(s,articlefor(subj));
+			sm_appendstr(s,towords(subj->parts[MODIFY])); 
+			sm_appendstr(s," ");
+			sm_appendstr(s,subj->s);
+			sm_appendstr(s,towords(subj->parts[OBJ]));
+			sm_appendstr(s,towords(subj->parts[VERB]));
+			sm_appendstr(s,towords(subj->parts[SUBP]));
+		}else {
+			sm_appendstr(s,towords(subj->parts[MODIFY])); 
+			sm_appendstr(s," ");
+			sm_appendstr(s,subj->s);
+			sm_appendstr(s,towords(subj->parts[VERB]));
+			sm_appendstr(s,towords(subj->parts[OBJ]));
+			sm_appendstr(s,towords(subj->parts[SUBP]));
+		}
 		if(*(s->m+1)>'a')
 			*(s->m+1)=*(s->m+1)-('a'-'A');
 	//yyj	sm_appendstr(s,".");
@@ -173,7 +186,11 @@ char *experience() {
 	p[1]=sentence("I",NULL,"worked",NULL);
 	p[1]->parts[OBJ]=sentence("","systems","with",NULL);
 	modify(((phrase *)p[1]->parts[OBJ])->parts[OBJ],"embeded");
-	return paragraph(p,1);
+	p[2]=sentence("language","I","learned",NULL);
+	modify(p[2],"first");
+	p[2]->parts[SUBP]=sentence("","qbasic","was",NULL);
+	modify(modify(((phrase *)p[2]->parts[SUBP])->parts[OBJ],"language"),"Microsofts");
+	return paragraph(p,2);
 
 }
 char *calling() {
