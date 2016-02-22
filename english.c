@@ -90,8 +90,10 @@ void normalize(phrase *r) {
 	}
 }
 int ising(char *s){
-	if(strstr(s,"ed")||strstr(s,"ing"))
-		return 1;
+	if(strstr(s,"ed"))
+		return ED;
+	if(strstr(s,"ing"))
+		return ING;
 	return 0;
 }
 void correct(phrase *r) {
@@ -103,7 +105,7 @@ void correct(phrase *r) {
 		if(rpn<10&&isbeing(verb))
 			verb->s=be(rpn,ising(verb->s));
 		if(ising(verb->s))
-			modify(verb,be(rpn,1));
+			modify(verb,be(rpn,ising(verb->s)));
 	}
 }
 phrase *sentence(char *subj,char *obj,char *verb,char *subp){
@@ -163,11 +165,11 @@ char *paragraph(phrase **p,int l){
 	}
 	return sm_dumpstr(s);
 }
-
-
 char *experience() {
 	phrase *p[3];
 	p[0]=sentence("I","computers","programed",NULL);
+	p[0]->parts[SUBP]=sentence("","years","for",NULL);
+	modify(((phrase *)p[0]->parts[SUBP])->parts[OBJ],"7");
 	p[1]=sentence("I",NULL,"worked",NULL);
 	p[1]->parts[OBJ]=sentence("","systems","with",NULL);
 	modify(((phrase *)p[1]->parts[OBJ])->parts[OBJ],"embeded");
@@ -176,15 +178,11 @@ char *experience() {
 }
 char *calling() {
 	phrase *p[3];
-	p[0]=sentence("I",NULL,"called",NULL);
-	modify(p[0]->parts[VERB],"feel");
+	p[0]=sentence("I",NULL,"been called",NULL);
+	//modify(p[0]->parts[VERB],"feel");
 	p[0]->parts[OBJ]=sentence("","automation","to work with",NULL);
 	modify(((phrase *)p[0]->parts[OBJ])->parts[OBJ],"agricultural");
 	p[1]=sentence("math","me","interests","also");
 
 	return paragraph(p,1);
 }
-
-
-
-
