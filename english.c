@@ -20,34 +20,72 @@
 #define ING 1
 #define ED 2
 #define P 3
+#define NUM_P 3+2+1
+#define MODIFY 2
+#define NEXT 1
+#define SUBJ 3
+#define OBJ 4
+#define VERB 5
+#define SUBP 6
 char *bes[]={"","","", "was","","will","where","","will",0};
 char *besing[]={"","","", "have been","am","will be","where","are","will be",0};
 
 char *besed[]={"","","", "have","","will have","where having","are having","will have",0};
-char *ings[]={"","ing","ed"};
-char *pn[]= {"","","","I","you","its|he|she","we","you","they"};
-char *pnp[]={"","","","mine","yours","its|his|hers","ours","yours","theres"};
-typedef struct phrase {
+char *ings[]={"","ing","ed",0};
+char *pn[]= {"","","","I","you","its|he|she","we","you","they",0};
+char *pnp[]={"","","","mine","yours","its|his|hers","ours","yours","theres",0};
+typedef struct phrase {//new plan: langauge sentences are directed loop heavy graphs
 	char *s;
-	char **m;
 	int tense;
 	int num;
-	int poses;
-	int global;
+	void *parts[NUM_P];//fuck the standards
 }phrase;
 typedef struct cxt {
 	phrase *antecedents[2*6];
 	int propcount;
 	int the;
 }cxt;
-phrase *mkp(char *s,char *m){
-	//TODO:this is shit, fix it
-	phrase *r=calloc(sizeof(char),sizeof(phrase));
-	r->s=s;
-	r->m=calloc(sizeof(char*),2);
-	*r->m=m;
-	return r;
+phrase *phrase_new(char *s){
+	if(s){
+		phrase *r= calloc(sizeof(phrase),1);
+		r->s=s;
+		return r;
+	}
+	return NULL;
+}
+void modify(phrase *p,char *s){
+	p->parts[MODIFY]=phrase_new(s);
 
+}
+void normalize(phrase *r) {
+	int i,j;
+	for(i=0;i<=NUM_P;i++){
+		if(r->parts[i]){
+			phrase *c=r->parts[i];
+			for(j=0;j<=NUM_P;j++)
+				c->parts[j]=r->parts[j];
+		}
+	}
+}
+void correct(phrase *r) {
+}
+phrase *sentence(char *subj,char *obj,char *verb,char *subp){
+	phrase *r=phrase_new(subj);
+	r->parts[SUBJ]=r;
+	r->parts[OBJ]=phrase_new(obj);
+	r->parts[VERB]=phrase_new(verb);
+	r->parts[SUBP]=phrase_new(subp);
+	normalize(r);
+	correct(r);
+	return r;
+}
+void phrase_free(phrase *p) {
+	if(p->s)
+		free(p->s);
+	int i;
+	for(i=0;i<=NUM_P;i++)
+		if(p->parts[i])
+			phrase_free((phrase*)(p->parts[i]));
 }
 
 char *be(int n,int tense, int ing){
@@ -65,59 +103,33 @@ char *prnoun(int n, int person,int gender, int poses) {
 	return pn[n*person];
 
 }
-char *tolist(char **t) {
-	sm *s=sm_new(100);
-	int i;
-	for(i=0;*(t+i);i++);
-	int l=i;
-	for(i=0;i<l;i++){
-		sm_appendstr(s,*(t+i));
-		if(i<l&& l>1)
-			sm_appendstr(s,", ");
-		if(i==l&&l>0)
-			sm_appendstr(s,"and ");
-		else
-			sm_appendstr(s,"  ");
-	}
-	return sm_dumpstr(s);
-}
-char *expand(phrase *p,int mode) {
-	sm *s=sm_new(200);
-	if(!mode){
+char *towords(phrase *subj){
+	sm *s=sm_new(1000);
+	if(!subj)
+		return sm_dumpstr(s);
+	if(subj->parts[SUBJ]==(phrase *)subj){
 		sm_appendstr(s," ");
-		char *m=tolist(p->m);
-		sm_appendstr(s,m);
-		free(m);
+		sm_appendstr(s,towords(subj->parts[MODIFY])); 
+		sm_appendstr(s,subj->s);
+		sm_appendstr(s,towords(subj->parts[VERB]));
+		sm_appendstr(s,towords(subj->parts[OBJ]));
+		sm_appendstr(s,towords(subj->parts[SUBP]));
+	}else {
 		sm_appendstr(s," ");
-		sm_appendstr(s,p->s);
-	}
-	if(mode==1){
-		sm_appendstr(s,*p->m);
-		sm_appendstr(s,p->s);
+		sm_appendstr(s,towords(subj->parts[MODIFY])); 
+		sm_appendstr(s," ");
+		sm_appendstr(s,subj->s);
 	}
 	return sm_dumpstr(s);
-}
-int update(phrase *p,cxt *c){
-	return 0;
-}
-char *scentence(phrase *subj,phrase *verb,phrase *obj,cxt *c) {
-	sm *s=sm_new(100);
-	
-	sm_appendstr(s," ");
-	sm_appendstrf(s,expand(subj,update(subj,c)));
-	sm_appendstrf(s,expand(verb,0));
-	sm_appendstrf(s,expand(obj,update(obj,c)));
-	sm_appendstr(s,".");
-	return sm_dumpstr(s);
-}
-char *experience() {
-	cxt c;
-	return scentence(mkp("I",""),mkp("program",""),mkp("computers",""),&c);
 
 }
-char *calling() {
-	cxt c;
-	return scentence(mkp("I",""),mkp("know","do not"),mkp("calling","my"),&c);
+char *experience() {
+	return towords(sentence("I","computers","program",NULL));
 }
+char *calling() {
+	return towords(sentence("I","computers","program",NULL));
+}
+
+
 
 
